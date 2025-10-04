@@ -1,1 +1,92 @@
+/* Estilos Generales */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Inter', sans-serif; /* Puedes añadir esta fuente desde Google Fonts si quieres */
+}
 
+/* Encabezado */
+.header-modern {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Sección de Presentación (Hero) */
+.hero-section {
+    background: linear-gradient(135deg, rgba(44, 62, 80, 0.9), rgba(52, 73, 94, 0.9)), url('https://www.toptal.com/designers/subtlepatterns/uploads/double-bubble-outline.png');
+    padding: 100px 0;
+}
+.hero-title {
+    font-weight: 700;
+    font-size: 3.5rem;
+}
+.btn-gradient {
+    background-image: linear-gradient(to right, #1a2980 0%, #26d0ce 51%, #1a2980 100%);
+    background-size: 200% auto;
+    color: white;
+    border: none;
+    transition: 0.5s;
+}
+.btn-gradient:hover {
+    background-position: right center;
+}
+
+
+/* Tarjetas de Plugins */
+.plugins-section {
+    background-color: #ffffff;
+}
+
+.plugin-card {
+    background-color: white;
+    border: 1px solid #e9ecef;
+    border-radius: 15px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden; /* Para que la imagen no se salga del borde redondeado */
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.plugin-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 30px rgba(0,0,0,0.1);
+}
+
+.plugin-image img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover; /* Asegura que la imagen cubra el espacio sin deformarse */
+}
+
+.plugin-content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Hace que esta sección crezca para ocupar el espacio disponible */
+}
+
+.plugin-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.plugin-description {
+    font-size: 0.9rem;
+    color: #6c757d;
+    flex-grow: 1; /* Empuja el meta y el botón hacia abajo */
+}
+
+.plugin-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #6c757d;
+    border-top: 1px solid #e9ecef;
+    padding-top: 15px;
+    margin-top: 15px;
+}
+
+.btn-download {
+    margin-top: 20px;
+}
