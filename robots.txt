@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://descargas.smsenlinea.com/sitemap.php

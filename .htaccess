@@ -1,0 +1,16 @@
+# Activar el motor de reescritura de URLs
+RewriteEngine On
+
+# Evitar que se listen los contenidos de las carpetas si no hay un index.php
+Options -Indexes
+
+# No aplicar las siguientes reglas a archivos o carpetas que ya existen
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# REGLA PRINCIPAL:
+# Si la URL coincide con el patrón "plugin/(algo)",
+# reenvía la solicitud internamente a "plugin.php?slug=(algo)"
+# [L] = Última regla, no procesar más.
+# [QSA] = Anexar cualquier otra variable de consulta si existiera.
+RewriteRule ^plugin/([a-zA-Z0-9-]+)/?$ plugin.php?slug=$1 [L,QSA]
