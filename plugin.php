@@ -12,7 +12,7 @@ if (!isset($_GET['slug']) || empty(trim($_GET['slug']))) {
 }
 $slug = $_GET['slug'];
 
-// 2. Buscamos el plugin en la base de datos de forma segura
+// 2. Buscamos el plugin en la base de datos
 $stmt = $mysqli->prepare("SELECT * FROM plugins WHERE slug = ? AND status = 'active' LIMIT 1");
 $stmt->bind_param('s', $slug);
 $stmt->execute();
@@ -29,6 +29,18 @@ if ($result->num_rows === 0) {
 }
 $plugin = $result->fetch_assoc();
 $stmt->close();
+
+// --- NUEVO: OBTENER DATOS DE RESEÑAS PARA EL RESUMEN ---
+$reviews_summary_result = $mysqli->query("SELECT COUNT(id) as total_reviews, AVG(rating) as avg_rating FROM plugin_reviews WHERE plugin_id = {$plugin['id']} AND is_approved = 1");
+$reviews_summary = $reviews_summary_result->fetch_assoc();
+$total_reviews = (int)($reviews_summary['total_reviews'] ?? 0);
+$average_rating = round((float)($reviews_summary['avg_rating'] ?? 0), 1);
+// --- FIN NUEVO ---
+
+
+// --- CONTAR LAS PREGUNTAS APROBADAS ---
+$qa_count_result = $mysqli->query("SELECT COUNT(id) as total FROM plugin_questions WHERE plugin_id = {$plugin['id']} AND is_approved = 1");
+$qa_count = $qa_count_result->fetch_assoc()['total'];
 
 // 3. Preparamos todas las variables que usaremos en la página
 $site_name = htmlspecialchars($app_settings['site_name'] ?? 'PluginHub');
@@ -50,6 +62,9 @@ $video_embed_url = !empty($plugin['video_url']) ? get_youtube_embed_url($plugin[
 // 4. Incluimos la cabecera completa del sitio
 include 'includes/header.php';
 ?>
+<style>
+    .rating-summary .fa-star { color: #ffc107; }
+</style>
 
 <main class="container py-5 flex-shrink-0">
     <div class="row">
@@ -119,6 +134,35 @@ include 'includes/header.php';
                         <li class="list-group-item d-flex justify-content-between"><b>Descargas:</b> <span><?php echo number_format($plugin['download_count']); ?></span></li>
                         <li class="list-group-item d-flex justify-content-between"><b>Actualizado:</b> <span><?php echo date('d/m/Y', strtotime($plugin['updated_at'])); ?></span></li>
                     </ul>
+
+                    <hr>
+                    <div class="text-start rating-summary">
+                        <h5 class="card-title mb-0">Calificación</h5>
+                        <?php if ($total_reviews > 0): ?>
+                            <div class="d-flex align-items-center">
+                                <span class="h4 fw-bold me-2"><?php echo $average_rating; ?></span>
+                                <div class="text-warning me-2">
+                                    <?php for ($i = 1; $i <= 5; $i++): ?>
+                                        <i class="<?php echo ($i <= $average_rating) ? 'fas' : 'far'; ?> fa-star"></i>
+                                    <?php endfor; ?>
+                                </div>
+                            </div>
+                            <a href="<?php echo SITE_URL; ?>/reviews.php?slug=<?php echo $plugin['slug']; ?>" class="small">Ver <?php echo $total_reviews; ?> comentario(s)</a> | 
+                            <a href="<?php echo SITE_URL; ?>/reviews.php?slug=<?php echo $plugin['slug']; ?>#review-form-card" class="small">Califica</a>
+                        <?php else: ?>
+                             <p class="small text-muted">Aún no hay calificaciones. <a href="<?php echo SITE_URL; ?>/reviews.php?slug=<?php echo $plugin['slug']; ?>#review-form-card">¡Sé el primero en calificar!</a></p>
+                        <?php endif; ?>
+                    </div>
+                    <hr>
+                    <div class="text-start">
+                        <h5 class="card-title">Preguntas</h5>
+                        <p class="text-muted small">¿Tienes dudas? Consulta lo que otros han preguntado.</p>
+                        <div class="d-grid">
+                            <a href="<?php echo SITE_URL; ?>/questions.php?slug=<?php echo $plugin['slug']; ?>" class="btn btn-outline-secondary">
+                                <i class="fas fa-comments me-2"></i> Ver (<?php echo $qa_count; ?>) Preguntas
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </aside>

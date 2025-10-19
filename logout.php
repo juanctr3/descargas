@@ -1,11 +1,11 @@
 <?php
-// Incluimos la configuración para iniciar la sesión
-require_once __DIR__ . '/../includes/config.php';
+// Incluimos la configuración para poder iniciar la sesión
+require_once 'includes/config.php';
 
-// 1. Vaciamos el array de la sesión
+// Destruimos todas las variables de sesión
 $_SESSION = array();
 
-// 2. Borramos la cookie de sesión del navegador
+// Borramos la cookie de sesión del navegador
 if (ini_get("session.use_cookies")) {
     $params = session_get_cookie_params();
     setcookie(session_name(), '', time() - 42000,
@@ -14,10 +14,10 @@ if (ini_get("session.use_cookies")) {
     );
 }
 
-// 3. Finalmente, destruimos la sesión del servidor
+// Finalmente, destruimos la sesión del servidor
 session_destroy();
 
-// 4. Redirigimos al usuario a la página de login
+// Redirigimos al usuario a la página de inicio
 header("Location: index.php");
 exit();
 ?>
