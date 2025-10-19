@@ -1,86 +1,79 @@
 <?php
-// 1. Incluimos la configuración para conectar a la DB y cargar los ajustes globales
-require_once 'includes/config.php';
+require_once __DIR__ . '/../includes/config.php';
 
-// 2. Consultamos la base de datos para obtener solo los plugins ACTIVOS
-$result = $mysqli->query("SELECT * FROM plugins WHERE status = 'active' ORDER BY id DESC");
-$plugins = $result->fetch_all(MYSQLI_ASSOC);
+if (isset($_SESSION['admin_id'])) {
+    header('Location: dashboard.php');
+    exit();
+}
+$error_message = '';
 
-// 3. Definimos las variables de SEO para esta página, que serán usadas por el header.php
-$site_name = htmlspecialchars($app_settings['site_name'] ?? 'Mi Sitio de Plugins');
-$page_title = $site_name . ' - Descarga de Plugins Premium y Gratuitos';
-$meta_description = htmlspecialchars($app_settings['seo_meta_description'] ?? 'Descarga los mejores plugins de forma segura.');
-$meta_keywords = htmlspecialchars($app_settings['seo_meta_keywords'] ?? 'plugins, descargas, gratis');
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $username = $_POST['username'];
+    $password = $_POST['password'];
 
-// 4. Incluimos la cabecera completa del sitio
-include 'includes/header.php';
+    if (empty($username) || empty($password)) {
+        $error_message = 'Por favor, ingresa tu usuario y contraseña.';
+    } else {
+        $stmt = $mysqli->prepare("SELECT id, username, password, whatsapp_number FROM admins WHERE username = ?");
+        $stmt->bind_param('s', $username);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 1) {
+            $admin = $result->fetch_assoc();
+            
+            if (password_verify($password, $admin['password'])) {
+                // ¡Contraseña correcta! Ahora procedemos con el 2FA.
+                if (empty($admin['whatsapp_number'])) {
+                    $error_message = 'El acceso 2FA no está configurado para este usuario. Guarda tu número de WhatsApp en la sección de Ajustes.';
+                } else {
+                    $otp_code = rand(100000, 999999);
+                    $expires_at = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+                    $phone_number = $admin['whatsapp_number'];
+                    
+                    // --- LA CORRECCIÓN ESTÁ AQUÍ ---
+                    // Guardamos el código en la tabla otp_codes (usamos plugin_id=NULL para diferenciarlo)
+                    $otp_stmt = $mysqli->prepare("INSERT INTO otp_codes (phone_number, otp_code, plugin_id, expires_at) VALUES (?, ?, NULL, ?)");
+                    // Como el plugin_id es NULL, solo necesitamos enlazar 3 parámetros
+                    $otp_stmt->bind_param('sss', $phone_number, $otp_code, $expires_at);
+                    
+                    if ($otp_stmt->execute() && sendWhatsAppNotification($phone_number, "🔐 Tu código de acceso al panel es: *{$otp_code}*. Válido por 10 minutos.", $app_settings)) {
+                        // Redirigimos a la página de verificación
+                        header('Location: verify-login.php?id=' . $admin['id']);
+                        exit();
+                    } else {
+                        $error_message = 'No se pudo enviar el código de verificación a tu WhatsApp.';
+                    }
+                }
+            } else {
+                $error_message = 'El usuario o la contraseña son incorrectos.';
+            }
+        } else {
+            $error_message = 'El usuario o la contraseña son incorrectos.';
+        }
+    }
+}
 ?>
-
-<section class="hero-section text-center text-white">
-    <div class="container">
-        <h1 class="hero-title">Plugins Premium. Simples. Seguros.</h1>
-        <p class="hero-subtitle lead">Descarga los mejores plugins con verificación segura vía WhatsApp.</p>
-        <a href="#plugins" class="btn btn-primary btn-lg btn-gradient"><i class="fas fa-download me-2"></i> Explorar Plugins</a>
-    </div>
-</section>
-
-<main class="flex-shrink-0">
-    <section id="plugins" class="plugins-section py-5">
-        <div class="container">
-            <h2 class="text-center mb-5">Plugins Disponibles</h2>
-            <div class="row">
-                <?php if (count($plugins) > 0): ?>
-                    <?php foreach ($plugins as $plugin): ?>
-                        <div class="col-md-6 col-lg-4 mb-4 d-flex align-items-stretch">
-                            <div class="plugin-card">
-                                <div class="plugin-image">
-                                    <a href="plugin/<?php echo htmlspecialchars($plugin['slug']); ?>/">
-                                        <img src="<?php echo SITE_URL . '/' . htmlspecialchars($plugin['image'] ? $plugin['image'] : 'assets/images/plugins/default.png'); ?>" alt="<?php echo htmlspecialchars($plugin['title']); ?>">
-                                    </a>
-                                </div>
-                                <div class="plugin-content">
-                                    <h5 class="plugin-title">
-                                        <a href="plugin/<?php echo htmlspecialchars($plugin['slug']); ?>/" class="text-dark text-decoration-none"><?php echo htmlspecialchars($plugin['title']); ?></a>
-                                    </h5>
-                                    <p class="plugin-description"><?php echo htmlspecialchars($plugin['short_description']); ?></p>
-                                    <div class="plugin-meta">
-                                        <span title="Versión"><i class="fas fa-code-branch"></i> v<?php echo htmlspecialchars($plugin['version'] ?? '1.0'); ?></span>
-                                        
-                                        <?php if (isset($plugin['price']) && $plugin['price'] > 0): ?>
-                                            <span class="plugin-price text-success fw-bold">
-                                                $<?php echo number_format($plugin['price'], 2); ?> USD
-                                            </span>
-                                        <?php else: ?>
-                                            <span class="plugin-price text-primary fw-bold">
-                                                Gratis
-                                            </span>
-                                        <?php endif; ?>
-
-                                    </div>
-                                    <a href="plugin/<?php echo htmlspecialchars($plugin['slug']); ?>/" class="btn btn-outline-primary w-100 mt-auto">
-                                        Ver Detalles
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <div class="col-12">
-                        <p class="text-center text-muted">No hay plugins disponibles en este momento. Vuelve pronto.</p>
-                    </div>
-                <?php endif; ?>
-            </div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Panel de Administración</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>body {display: flex; align-items: center; justify-content: center; height: 100vh; background-color: #f8f9fa;} .login-card {width: 100%; max-width: 400px; padding: 2rem; border: none; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);}</style>
+</head>
+<body>
+    <div class="card login-card">
+        <div class="card-body">
+            <h3 class="card-title text-center mb-4">Acceso de Administrador</h3>
+            <?php if (!empty($error_message)): ?><div class="alert alert-danger"><?php echo $error_message; ?></div><?php endif; ?>
+            <form action="index.php" method="POST">
+                <div class="mb-3"><label for="username" class="form-label">Usuario</label><input type="text" class="form-control" id="username" name="username" required></div>
+                <div class="mb-3"><label for="password" class="form-label">Contraseña</label><input type="password" class="form-control" id="password" name="password" required></div>
+                <div class="d-grid"><button type="submit" class="btn btn-primary">Ingresar</button></div>
+            </form>
         </div>
-    </section>
-</main>
-
-<?php 
-// Incluimos el footer, que se encarga de los scripts comunes
-include 'includes/footer.php'; 
-
-// Incluimos los modales que esta página pueda necesitar (aunque no se activen directamente desde aquí)
-include 'includes/modal_otp.php'; 
-include 'includes/modal_video.php';
-?>
+    </div>
 </body>
 </html>
