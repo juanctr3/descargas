@@ -24,6 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'color_dark'             => $_POST['color_dark'] ?? '#1a202c',
             'color_light'            => $_POST['color_light'] ?? '#f7fafc',
             'google_analytics_code'  => $_POST['google_analytics_code'] ?? '',
+            'review_reminder_days'   => (int)($_POST['review_reminder_days'] ?? 7), // NUEVO
+        	'default_license_duration' => (int)($_POST['default_license_duration'] ?? 30),
             'paypal_client_id'       => $_POST['paypal_client_id'] ?? '',
             'paypal_client_secret'   => $_POST['paypal_client_secret'] ?? '',
             'mercadopago_access_token' => $_POST['mercadopago_access_token'] ?? '',
@@ -148,9 +150,21 @@ $admin_info_stmt->close();
                     <div class="mb-3"><label for="seo_meta_description" class="form-label">Meta Descripción</label><textarea class="form-control" id="seo_meta_description" name="seo_meta_description" rows="3"><?php echo htmlspecialchars($app_settings['seo_meta_description'] ?? ''); ?></textarea></div>
                     <div class="mb-3"><label for="seo_meta_keywords" class="form-label">Palabras Clave (Keywords)</label><input type="text" class="form-control" id="seo_meta_keywords" name="seo_meta_keywords" value="<?php echo htmlspecialchars($app_settings['seo_meta_keywords'] ?? ''); ?>"></div>
                 </div></div>
-                <div class="card mb-4"><div class="card-header">Integraciones y Scripts</div><div class="card-body">
+                <div class="card mb-4"><div class="card-header">Integraciones y Scripts</div>
+				<div class="mb-3">
+   			 	<label for="default_license_duration" class="form-label">Duración de Licencia por Defecto (días)</label>
+    			<input type="number" class="form-control" id="default_license_duration" name="default_license_duration" min="0" value="<?php echo htmlspecialchars($app_settings['default_license_duration'] ?? '365'); ?>">
+    			<div class="form-text">Duración para licencias generadas al descargar. Usa <strong>0</strong> para que nunca expiren.</div>
+				</div>
+                    <div class="card-body">
                     <div class="mb-3"><label for="google_analytics_code" class="form-label">Código de Google Analytics (GA4)</label><textarea class="form-control" id="google_analytics_code" name="google_analytics_code" rows="8" placeholder="Pega aquí el código completo de Google, incluyendo las etiquetas <script>..."><?php echo htmlspecialchars($app_settings['google_analytics_code'] ?? ''); ?></textarea></div>
-                </div></div>
+                    
+                    <div class="mb-3">
+                        <label for="review_reminder_days" class="form-label">Días para Recordatorio de Reseña</label>
+                        <input type="number" class="form-control" id="review_reminder_days" name="review_reminder_days" min="1" value="<?php echo htmlspecialchars($app_settings['review_reminder_days'] ?? '7'); ?>">
+                        <div class="form-text">Número de días a esperar después de una descarga antes de enviar un recordatorio para dejar una reseña.</div>
+                    </div>
+                    </div></div>
                 <div class="card mb-4"><div class="card-header">Ajustes de Pasarelas de Pago</div><div class="card-body">
                     <h6 class="card-title">PayPal</h6>
                     <div class="mb-3"><label for="paypal_client_id" class="form-label">PayPal Client ID</label><input type="text" class="form-control" id="paypal_client_id" name="paypal_client_id" value="<?php echo htmlspecialchars($app_settings['paypal_client_id'] ?? ''); ?>"></div>

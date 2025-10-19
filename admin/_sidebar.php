@@ -17,6 +17,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <li class="nav-item mt-3"><small class="text-muted ps-3">Gestión de Contenido</small></li>
         <li><a href="add-plugin.php" class="nav-link <?php echo ($current_page == 'add-plugin.php') ? 'active' : 'text-white'; ?>"><i class="fas fa-plus-circle fa-fw me-2"></i> Añadir Plugin</a></li>
         <li><a href="gestionar-plugins.php" class="nav-link <?php echo ($current_page == 'gestionar-plugins.php') ? 'active' : 'text-white'; ?>"><i class="fas fa-plug fa-fw me-2"></i> Gestionar Plugins</a></li>
+		<li><a href="manage-licenses.php" class="nav-link <?php echo ($current_page == 'manage-licenses.php' || $current_page == 'edit-license.php') ? 'active' : 'text-white'; ?>"><i class="fas fa-key fa-fw me-2"></i> Gestionar Licencias</a></li>
+		<li><a href="manage-questions.php" class="nav-link <?php echo ($current_page == 'manage-questions.php') ? 'active' : 'text-white'; ?>"><i class="fas fa-question-circle fa-fw me-2"></i> Preguntas (Q&A)</a></li>
+		<li><a href="manage-reviews.php" class="nav-link <?php echo ($current_page == 'manage-reviews.php') ? 'active' : 'text-white'; ?>"><i class="fas fa-star fa-fw me-2"></i> Reseñas</a></li>
         
         <li class="nav-item mt-3"><small class="text-muted ps-3">Gestión de Usuarios</small></li>
         <li><a href="manage-users.php" class="nav-link <?php echo ($current_page == 'manage-users.php') ? 'active' : 'text-white'; ?>"><i class="fas fa-users fa-fw me-2"></i> Usuarios Públicos</a></li>
@@ -28,6 +31,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
         
         <li class="nav-item mt-3"><small class="text-muted ps-3">Sistema</small></li>
         <li><a href="settings.php" class="nav-link <?php echo ($current_page == 'settings.php') ? 'active' : 'text-white'; ?>"><i class="fas fa-sliders-h fa-fw me-2"></i> Ajustes Generales</a></li>
+		<li><a href="documentation.php" class="nav-link <?php echo ($current_page == 'documentation.php') ? 'active' : 'text-white'; ?>"><i class="fas fa-book fa-fw me-2"></i> Documentación API</a></li>
     </ul>
     <hr>
     <div class="dropdown">

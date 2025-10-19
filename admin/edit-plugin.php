@@ -12,18 +12,23 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 $plugin_id = (int)$_GET['id'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Recoger todos los datos del formulario
     $title = trim($_POST['title']);
     $slug = generate_slug($title);
+    $update_identifier = trim($_POST['update_identifier']);
     $short_description = trim($_POST['short_description']);
     $full_description = $_POST['full_description'];
     $version = trim($_POST['version']);
-    $price = !empty($_POST['price']) ? trim($_POST['price']) : '0.00';
+    $price = !empty($_POST['price']) ? (float)$_POST['price'] : 0.00;
     $status = trim($_POST['status']);
+    $requires_license = isset($_POST['requires_license']) ? 1 : 0;
+    $download_count = (int)($_POST['download_count'] ?? 0);
     $video_url = trim($_POST['video_url']);
     $seo_title = trim($_POST['seo_title']);
     $seo_meta_description = trim($_POST['seo_meta_description']);
     $seo_meta_keywords = trim($_POST['seo_meta_keywords']);
 
+    // Gestión de la galería de imágenes
     $current_gallery_images = !empty($_POST['current_gallery_images']) ? json_decode($_POST['current_gallery_images'], true) : [];
     $images_to_delete = $_POST['delete_images'] ?? [];
     foreach ($images_to_delete as $image_path) {
@@ -47,9 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $gallery_images_json = json_encode(array_values($current_gallery_images));
 
-    $update_query = "UPDATE plugins SET title = ?, slug = ?, seo_title = ?, seo_meta_description = ?, seo_meta_keywords = ?, short_description = ?, full_description = ?, version = ?, price = ?, video_url = ?, gallery_images = ?, status = ?";
-    $params = [$title, $slug, $seo_title, $seo_meta_description, $seo_meta_keywords, $short_description, $full_description, $version, $price, $video_url, $gallery_images_json, $status];
-    $types = 'ssssssssdsss';
+    // Construcción de la consulta de actualización
+    $update_query = "UPDATE plugins SET title = ?, slug = ?, update_identifier = ?, seo_title = ?, seo_meta_description = ?, seo_meta_keywords = ?, short_description = ?, full_description = ?, version = ?, price = ?, video_url = ?, gallery_images = ?, status = ?, requires_license = ?, download_count = ?";
+    $params = [$title, $slug, $update_identifier, $seo_title, $seo_meta_description, $seo_meta_keywords, $short_description, $full_description, $version, $price, $video_url, $gallery_images_json, $status, $requires_license, $download_count];
+    $types = 'sssssssssdsssii';
 
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $new_image_file_name = uniqid('featured-', true) . '-' . basename($_FILES['image']['name']);
@@ -66,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $update_query .= ", file_path = ?, file_size = ?";
             $params[] = $new_plugin_file_name;
             $params[] = filesize($plugin_target_path);
-            $types .= 'ss';
+            $types .= 'si';
         }
     }
 
@@ -80,11 +86,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($stmt_update->execute()) {
         $success_message = '¡Plugin actualizado con éxito!';
     } else {
-        $error_message = 'Error al actualizar: ' . $stmt_update->error;
+        // --- LÓGICA CORREGIDA ---
+        // Capturamos el error específico de entrada duplicada (código 1062)
+        if ($mysqli->errno === 1062) {
+            $error_message = 'Error: El "Identificador para Actualizaciones" que has introducido ya está en uso por otro plugin. Por favor, elige uno único.';
+        } else {
+            $error_message = 'Error al actualizar la base de datos: ' . $stmt_update->error;
+        }
     }
     $stmt_update->close();
 }
 
+// Obtener los datos actuales del plugin para mostrar en el formulario
 $stmt = $mysqli->prepare("SELECT * FROM plugins WHERE id = ?");
 $stmt->bind_param('i', $plugin_id);
 $stmt->execute();
@@ -112,20 +125,23 @@ $stmt->close();
         <main class="w-100 p-4">
             <h1 class="mb-4">Editando: <?php echo htmlspecialchars($plugin['title'] ?? ''); ?></h1>
             <?php if ($error_message): ?><div class="alert alert-danger"><?php echo $error_message; ?></div><?php endif; ?>
-            <?php if ($success_message): ?><div class="alert alert-success"><?php echo $success_message; ?> <a href="manage-plugins.php" class="alert-link">Volver a la lista</a></div><?php endif; ?>
+            <?php if ($success_message): ?><div class="alert alert-success"><?php echo $success_message; ?> <a href="gestionar-plugins.php" class="alert-link">Volver a la lista</a></div><?php endif; ?>
 
             <form method="POST" action="edit-plugin.php?id=<?php echo $plugin_id; ?>" enctype="multipart/form-data">
                 <input type="hidden" name="current_gallery_images" value="<?php echo htmlspecialchars($plugin['gallery_images'] ?? '[]'); ?>">
                 
                 <div class="card mb-4"><div class="card-header">Información Principal</div><div class="card-body">
-                    <div class="mb-3"><label for="title" class="form-label">Título del Plugin</label><input type="text" class="form-control" id="title" name="title" value="<?php echo htmlspecialchars($plugin['title'] ?? ''); ?>" required></div>
+                    <div class="mb-3"><label for="title" class="form-label">Título del Plugin (*)</label><input type="text" class="form-control" id="title" name="title" value="<?php echo htmlspecialchars($plugin['title'] ?? ''); ?>" required></div>
+                    <div class="mb-3"><label for="update_identifier" class="form-label">Identificador para Actualizaciones (*)</label><input type="text" class="form-control" id="update_identifier" name="update_identifier" value="<?php echo htmlspecialchars($plugin['update_identifier'] ?? ''); ?>" required><div class="form-text"><strong>¡Cuidado!</strong> Cambiar esto puede romper las actualizaciones para usuarios existentes.</div></div>
                     <div class="mb-3"><label for="short_description" class="form-label">Descripción Corta</label><textarea class="form-control" id="short_description" name="short_description" rows="2" required><?php echo htmlspecialchars($plugin['short_description'] ?? ''); ?></textarea></div>
                     <div class="mb-3"><label for="full_description" class="form-label">Descripción Completa</label><textarea class="form-control" id="editor" name="full_description" rows="10"><?php echo htmlspecialchars($plugin['full_description'] ?? ''); ?></textarea></div>
                     <div class="row">
-                        <div class="col-md-4 mb-3"><label for="version" class="form-label">Versión</label><input type="text" class="form-control" id="version" name="version" value="<?php echo htmlspecialchars($plugin['version'] ?? ''); ?>" required></div>
-                        <div class="col-md-4 mb-3"><label for="price" class="form-label">Precio (USD)</label><input type="number" class="form-control" id="price" name="price" step="0.01" min="0" value="<?php echo htmlspecialchars($plugin['price'] ?? '0.00'); ?>"></div>
-                        <div class="col-md-4 mb-3"><label for="status" class="form-label">Estado</label><select class="form-select" id="status" name="status"><option value="active" <?php echo (($plugin['status'] ?? '') === 'active') ? 'selected' : ''; ?>>Activo</option><option value="inactive" <?php echo (($plugin['status'] ?? '') === 'inactive') ? 'selected' : ''; ?>>Inactivo</option></select></div>
+                        <div class="col-md-3 mb-3"><label for="version" class="form-label">Versión</label><input type="text" class="form-control" id="version" name="version" value="<?php echo htmlspecialchars($plugin['version'] ?? ''); ?>" required></div>
+                        <div class="col-md-3 mb-3"><label for="price" class="form-label">Precio (USD)</label><input type="number" class="form-control" id="price" name="price" step="0.01" min="0" value="<?php echo htmlspecialchars($plugin['price'] ?? '0.00'); ?>"></div>
+                        <div class="col-md-3 mb-3"><label for="download_count" class="form-label">Contador de Descargas</label><input type="number" class="form-control" id="download_count" name="download_count" min="0" value="<?php echo htmlspecialchars($plugin['download_count'] ?? '0'); ?>"></div>
+                        <div class="col-md-3 mb-3"><label for="status" class="form-label">Estado</label><select class="form-select" id="status" name="status"><option value="active" <?php echo (($plugin['status'] ?? '') === 'active') ? 'selected' : ''; ?>>Activo</option><option value="inactive" <?php echo (($plugin['status'] ?? '') === 'inactive') ? 'selected' : ''; ?>>Inactivo</option></select></div>
                     </div>
+                     <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" name="requires_license" id="requires_license" value="1" <?php echo !empty($plugin['requires_license']) ? 'checked' : ''; ?>><label class="form-check-label" for="requires_license">Requiere Licencia</label></div>
                 </div></div>
 
                 <div class="card mb-4"><div class="card-header">Media Adicional</div><div class="card-body">
@@ -150,7 +166,7 @@ $stmt->close();
                     </div>
                 </div></div>
 
-                <a href="manage-plugins.php" class="btn btn-secondary mt-3">Cancelar</a>
+                <a href="gestionar-plugins.php" class="btn btn-secondary mt-3">Cancelar</a>
                 <button type="submit" class="btn btn-primary mt-3">Actualizar Plugin</button>
             </form>
         </main>
@@ -158,6 +174,6 @@ $stmt->close();
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
-    <script>$(document).ready(function() {$('#editor').summernote({height: 300, toolbar: [['style', ['style']],['font', ['bold', 'underline', 'clear']],['color', ['color']],['para', ['ul', 'ol', 'paragraph']],['table', ['table']],['insert', ['link', 'picture', 'video']],['view', ['fullscreen', 'codeview', 'help']]]});});</script>
+    <script>$(document).ready(function() {$('#editor').summernote({height: 300});});</script>
 </body>
 </html>
