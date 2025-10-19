@@ -25,4 +25,6 @@ $mysqli->set_charset('utf8mb4');
 // Incluimos y ejecutamos la carga de ajustes
 require_once __DIR__ . '/functions.php';
 $app_settings = load_settings($mysqli);
+// --- CLAVE SECRETA PARA TAREAS CRON ---
+define('CRON_SECRET_KEY', 'JC0020560392jc');
 ?>
