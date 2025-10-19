@@ -1,20 +1,21 @@
 <?php
-// Usamos las variables globales que se cargan en config.php ($mysqli, $app_settings, SITE_URL)
-
-// --- PREPARACIÓN DE VARIABLES PARA EL HEADER ---
+// includes/header.php
 
 $site_name_header = htmlspecialchars($app_settings['site_name'] ?? 'PluginHub');
 $logo_path = $app_settings['site_logo_path'] ?? '';
 $favicon_path = $app_settings['site_favicon_path'] ?? '';
 
-// La página que incluye este archivo (ej. index.php) debe definir $page_title y $meta_description.
-// Si no están definidas, usamos los valores por defecto de los ajustes generales.
 $final_page_title = isset($page_title) ? htmlspecialchars($page_title) . ' - ' . $site_name_header : $site_name_header;
 $final_meta_description = isset($meta_description) ? htmlspecialchars($meta_description) : htmlspecialchars($app_settings['seo_meta_description'] ?? 'Descarga de plugins y recursos.');
 
-// Obtenemos los enlaces del menú para el encabezado desde la base de datos
-$header_links_result = $mysqli->query("SELECT * FROM menus WHERE link_location = 'header' ORDER BY link_order ASC, id ASC");
-$header_links = $header_links_result->fetch_all(MYSQLI_ASSOC);
+// --- CORRECCIÓN FINAL: Se usan los nombres de columna exactos de la tabla `menus` ---
+$header_links_result = $mysqli->query("SELECT link_text, link_url, open_in_new_tab, icon_class FROM menus WHERE link_location = 'header' ORDER BY link_order ASC, id ASC");
+
+$header_links = [];
+if ($header_links_result) {
+    $header_links = $header_links_result->fetch_all(MYSQLI_ASSOC);
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -45,7 +46,6 @@ $header_links = $header_links_result->fetch_all(MYSQLI_ASSOC);
     
     <?php
     if (!empty($app_settings['google_analytics_code'])) {
-        // Imprimimos el código tal cual lo pega el usuario
         echo $app_settings['google_analytics_code'];
     }
     ?>
@@ -67,7 +67,7 @@ $header_links = $header_links_result->fetch_all(MYSQLI_ASSOC);
                 <div class="collapse navbar-collapse" id="mainNavbar">
                     <ul class="navbar-nav ms-auto">
                         <?php
-                        // Mostramos los enlaces dinámicos que creaste en el panel
+                        // --- CORRECCIÓN FINAL: Se usan las claves correctas: link_url, open_in_new_tab, icon_class, link_text ---
                         foreach ($header_links as $link):
                         ?>
                             <li class="nav-item">

@@ -1,29 +1,34 @@
 <?php
-$site_name_footer = htmlspecialchars($app_settings['site_name'] ?? 'PluginHub');
-$footer_links_result = $mysqli->query("SELECT * FROM menus WHERE link_location = 'footer' ORDER BY link_order ASC, id ASC");
-$footer_links = $footer_links_result->fetch_all(MYSQLI_ASSOC);
+// includes/footer.php
 ?>
-<footer class="text-center py-4 bg-dark text-white mt-auto">
+
+<footer class="footer mt-auto py-3 bg-light border-top">
     <div class="container">
-        <?php if (count($footer_links) > 0): ?>
-            <div class="footer-nav mb-2">
-                <?php $links_array = []; foreach ($footer_links as $link) {
-                    $icon_html = !empty($link['icon_class']) ? '<i class="' . htmlspecialchars($link['icon_class']) . ' me-1"></i>' : '';
-                    $target = $link['open_in_new_tab'] ? ' target="_blank" rel="noopener noreferrer"' : '';
-                    $links_array[] = '<a href="' . htmlspecialchars($link['link_url']) . '" class="text-white-50 px-2"' . $target . '>' . $icon_html . htmlspecialchars($link['link_text']) . '</a>';
-                } echo implode(' &middot; ', $links_array); ?>
+        <div class="row">
+            <div class="col-lg-4 mb-3 mb-lg-0 text-center text-lg-start">
+                <p class="text-muted mb-0">&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars($app_settings['site_name'] ?? 'PluginStore'); ?>. Todos los derechos reservados.</p>
             </div>
-        <?php endif; ?>
-        <p class="mb-0">&copy; <?php echo date('Y'); ?> <?php echo $site_name_footer; ?>. Todos los derechos reservados.</p>
+
+            <div class="col-lg-8 text-center text-lg-end">
+                <?php
+                // Cargar menús del footer si existen
+                $footer_menus_query = $mysqli->query("SELECT link_text, link_url, open_in_new_tab FROM menus WHERE link_location = 'footer' ORDER BY link_order ASC");
+                if ($footer_menus_query && $footer_menus_query->num_rows > 0) {
+                    while ($item = $footer_menus_query->fetch_assoc()) {
+                        $target_attr = !empty($item['open_in_new_tab']) ? ' target="_blank"' : '';
+                        echo '<a href="' . htmlspecialchars($item['link_url']) . '" class="text-muted me-3"' . $target_attr . '>' . htmlspecialchars($item['link_text']) . '</a>';
+                    }
+                }
+                
+                // --- NUEVO: El enlace solo se muestra si el usuario ha iniciado sesión ---
+                if (isset($_SESSION['user_id'])) {
+                    echo '<a href="' . SITE_URL . '/api-documentation.php" class="text-muted me-3">Documentación para Desarrolladores</a>';
+                }
+                ?>
+            </div>
+        </div>
     </div>
 </footer>
 
-<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/intlTelInput.min.js"></script>
-
-<script>
-    const SITE_URL = "<?php echo SITE_URL; ?>";
-</script>
-
-<script src="<?php echo SITE_URL; ?>/assets/js/main.js"></script>
+<script src="<?php echo SITE_URL; ?>/assets/js/main.js?v=<?php echo time(); ?>"></script>
