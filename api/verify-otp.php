@@ -1,95 +1,125 @@
 <?php
-// Indicamos que la respuesta será en formato JSON
+// api/verify-otp.php
+
 header('Content-Type: application/json');
-// Incluimos la configuración principal que conecta a la DB y carga los ajustes
 require_once '../includes/config.php';
 
-// Solo aceptamos solicitudes de tipo POST
+// Validamos que la solicitud sea por el método POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+    echo json_encode(['success' => false, 'message' => 'Método no permitido.']);
     exit();
 }
 
-// Recibimos los datos enviados por el JavaScript
-$phone_number = $_POST['phone_number'] ?? null;
-$otp_code = $_POST['otp_code'] ?? null;
+// Recibimos y limpiamos los datos del formulario
+$plugin_id = filter_input(INPUT_POST, 'plugin_id', FILTER_VALIDATE_INT);
+$plugin_slug = filter_input(INPUT_POST, 'plugin_slug', FILTER_SANITIZE_STRING);
+$otp_code = trim($_POST['otp_code'] ?? '');
+$phone_number = $_SESSION['download_phone'] ?? null;
 
-// Validación básica de los datos recibidos
-if (empty($phone_number) || empty($otp_code)) {
-    echo json_encode(['success' => false, 'message' => 'Faltan datos.']);
+// Validaciones básicas de los datos recibidos
+if (!$plugin_id || !$plugin_slug || empty($otp_code) || empty($phone_number)) {
+    echo json_encode(['success' => false, 'message' => 'Faltan datos para la verificación.']);
     exit();
 }
 
-// 1. Buscamos el código en la base de datos para validarlo.
-// También obtenemos los datos del usuario que se guardaron temporalmente con el código.
-// Buscamos donde plugin_id NO ES NULL, para diferenciarlo de los OTP de admin.
-$stmt = $mysqli->prepare("
-    SELECT id, plugin_id, used, expires_at, user_name, user_email, opt_in_notifications 
-    FROM otp_codes 
-    WHERE phone_number = ? AND otp_code = ? AND plugin_id IS NOT NULL 
-    ORDER BY id DESC LIMIT 1
-");
-$stmt->bind_param('ss', $phone_number, $otp_code);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($result->num_rows === 0) {
-    echo json_encode(['success' => false, 'message' => 'El código de verificación es incorrecto.']);
-    $stmt->close();
+// Verificamos que el código OTP sea correcto y no haya expirado
+if (!isset($_SESSION['otp_code']) || $_SESSION['otp_code'] != $otp_code || time() > $_SESSION['otp_expiry']) {
+    echo json_encode(['success' => false, 'message' => 'El código es incorrecto o ha expirado.']);
     exit();
 }
 
-$otp_data = $result->fetch_assoc();
+// Limpiamos las variables de sesión del OTP para que no se pueda reutilizar
+unset($_SESSION['otp_code']);
+unset($_SESSION['otp_expiry']);
+unset($_SESSION['download_phone']);
+
+// Recogemos los datos opcionales del usuario
+$user_name = trim($_POST['user_name'] ?? '');
+$email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL) ? trim($_POST['email']) : null;
+$opt_in = isset($_POST['opt_in']) ? 1 : 0;
+
+// Verificamos si el número de teléfono corresponde a un usuario ya registrado
+$user_id = null;
+$stmt_user = $mysqli->prepare("SELECT id, name FROM users WHERE whatsapp_number = ?");
+$stmt_user->bind_param('s', $phone_number);
+$stmt_user->execute();
+$user_result = $stmt_user->get_result();
+if ($user_result->num_rows > 0) {
+    $user_data = $user_result->fetch_assoc();
+    $user_id = $user_data['id'];
+    // Si el usuario ya existe, usamos su nombre de la base de datos
+    $user_name = $user_data['name'];
+}
+$stmt_user->close();
+
+
+// Registramos la descarga en la base de datos
+$stmt = $mysqli->prepare("INSERT INTO downloads (plugin_id, user_id, user_name, user_email, phone_number, opt_in_notifications) VALUES (?, ?, ?, ?, ?, ?)");
+$stmt->bind_param('iisssi', $plugin_id, $user_id, $user_name, $email, $phone_number, $opt_in);
+
+if ($stmt->execute()) {
+    $download_id = $stmt->insert_id;
+
+    // Incrementar el contador de descargas del plugin
+    $mysqli->query("UPDATE plugins SET download_count = download_count + 1 WHERE id = $plugin_id");
+
+    $response = [
+        'success' => true,
+        'message' => '¡Código verificado! Tu descarga comenzará en breve.',
+        'download_url' => SITE_URL . '/download.php?slug=' . $plugin_slug
+    ];
+
+    // --- GENERACIÓN DE LICENCIA AUTOMÁTICA ---
+    $plugin_res = $mysqli->query("SELECT title, requires_license FROM plugins WHERE id = $plugin_id");
+    $plugin_data = $plugin_res->fetch_assoc();
+
+    if ($plugin_data && $plugin_data['requires_license']) {
+        $license_key = 'LIC-' . strtoupper(bin2hex(random_bytes(16)));
+        $duration_days = (int)($app_settings['default_license_duration'] ?? 365);
+        $expires_at = null;
+        $expires_at_formatted = 'Nunca';
+
+        if ($duration_days > 0) {
+            $expires_at = date('Y-m-d', strtotime("+$duration_days days"));
+            $expires_at_formatted = date('d/m/Y', strtotime($expires_at));
+        }
+
+        // Insertar la nueva licencia en la base de datos
+        $stmt_lic = $mysqli->prepare("INSERT INTO license_keys (plugin_id, user_id, download_id, license_key, expires_at) VALUES (?, ?, ?, ?, ?)");
+        
+        // --- LÍNEA CORREGIDA ---
+        // Se cambió el segundo tipo de 'i' (integer) a 's' (string) para que la base de datos
+        // acepte correctamente el valor `null` cuando el usuario no ha iniciado sesión.
+        $stmt_lic->bind_param('isiss', $plugin_id, $user_id, $download_id, $license_key, $expires_at);
+        
+        $stmt_lic->execute();
+        $stmt_lic->close();
+
+        // Añadir la licencia a la respuesta para mostrarla en el alert
+        $response['license_key'] = $license_key;
+        $response['expires_at'] = $expires_at_formatted;
+
+        // Enviar notificaciones con la licencia
+        $user_name_to_notify = !empty($user_name) ? $user_name : 'Usuario';
+        
+        // Notificación por WhatsApp
+        if (!empty($phone_number)) {
+            $wa_message = "🎉 ¡Gracias por descargar *{$plugin_data['title']}*!\n\nTu clave de licencia es:\n*{$license_key}*\n\nExpira: {$expires_at_formatted}\n\nGuárdala para activar el plugin.";
+            sendWhatsAppNotification($phone_number, $wa_message, $app_settings);
+        }
+        // Notificación por Email
+        if (!empty($email)) {
+            $email_subject = "Tu licencia para el plugin {$plugin_data['title']}";
+            $email_body = "Hola {$user_name_to_notify},<br><br>Gracias por tu descarga. Aquí tienes tu clave de licencia para activar <strong>{$plugin_data['title']}</strong>:<br><br><strong style='font-size: 1.2em; background-color: #f0f0f0; padding: 5px 10px; border-radius: 5px;'>{$license_key}</strong><br><br>Esta licencia expira el: <strong>{$expires_at_formatted}</strong>.<br><br>¡Disfruta del plugin!";
+            sendSMTPMail($email, $user_name_to_notify, $email_subject, $email_body, $app_settings);
+        }
+    }
+    // --- FIN DE GENERACIÓN DE LICENCIA ---
+
+    echo json_encode($response);
+} else {
+    echo json_encode(['success' => false, 'message' => 'Error al registrar la descarga.']);
+}
+
 $stmt->close();
-
-// 2. Verificamos si el código ya fue usado o ha expirado
-if ($otp_data['used']) {
-    echo json_encode(['success' => false, 'message' => 'Este código ya ha sido utilizado.']);
-    exit();
-}
-
-if (strtotime($otp_data['expires_at']) < time()) {
-    echo json_encode(['success' => false, 'message' => 'Este código ha expirado. Por favor, solicita uno nuevo.']);
-    exit();
-}
-
-// 3. ¡El código es válido! Marcamos el código como usado para que no se pueda volver a utilizar.
-$update_stmt = $mysqli->prepare("UPDATE otp_codes SET used = 1 WHERE id = ?");
-$update_stmt->bind_param('i', $otp_data['id']);
-$update_stmt->execute();
-$update_stmt->close();
-
-// 4. Incrementamos el contador de descargas del plugin correspondiente.
-$update_plugin_stmt = $mysqli->prepare("UPDATE plugins SET download_count = download_count + 1 WHERE id = ?");
-$update_plugin_stmt->bind_param('i', $otp_data['plugin_id']);
-$update_plugin_stmt->execute();
-$update_plugin_stmt->close();
-
-// 5. Registramos la descarga en el historial, incluyendo los datos del usuario si los proporcionó.
-$user_id_to_log = $_SESSION['user_id'] ?? null; // Obtenemos el ID del usuario de la sesión, si ha iniciado sesión.
-$ip_address = $_SERVER['REMOTE_ADDR'] ?? 'Desconocido';
-$user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Desconocido';
-
-$insert_download_stmt = $mysqli->prepare(
-    "INSERT INTO downloads (plugin_id, user_id, phone_number, ip_address, user_agent, user_name, user_email, opt_in_notifications) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-);
-$insert_download_stmt->bind_param('iisssssi', 
-    $otp_data['plugin_id'], 
-    $user_id_to_log, 
-    $phone_number, 
-    $ip_address, 
-    $user_agent, 
-    $otp_data['user_name'], 
-    $otp_data['user_email'], 
-    $otp_data['opt_in_notifications']
-);
-$insert_download_stmt->execute();
-$insert_download_stmt->close();
-
-// 6. Preparamos la respuesta exitosa con el enlace de descarga seguro.
-$download_link = SITE_URL . '/download.php?plugin_id=' . $otp_data['plugin_id'];
-
-// Enviamos la respuesta JSON al JavaScript para que inicie la descarga.
-echo json_encode(['success' => true, 'download_url' => $download_link]);
 ?>
