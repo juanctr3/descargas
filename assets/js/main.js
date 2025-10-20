@@ -1,8 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     
-    // Inicialización del campo de teléfono internacional
+    var iti; // Hacer la variable iti accesible globalmente en este scope
     const phoneInputField = document.querySelector("#phone_number");
-    var iti;
     if (phoneInputField) {
         iti = window.intlTelInput(phoneInputField, {
             initialCountry: "auto",
@@ -16,7 +15,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Lógica para abrir el modal de descarga (OTP)
     const otpModalElement = document.getElementById('otpModal');
     if (otpModalElement) {
         const downloadModal = new bootstrap.Modal(otpModalElement, {});
@@ -27,10 +25,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const pluginId = this.dataset.pluginId;
                 const pluginSlug = this.dataset.pluginSlug;
 
-                // Asignar los valores a los campos ocultos del formulario
+                if (!pluginId || !pluginSlug) {
+                    console.error("Botón de descarga no tiene data-plugin-id o data-plugin-slug.");
+                    return;
+                }
+
+                // Asignar los valores a los campos ocultos de AMBOS formularios
                 document.getElementById('modal_plugin_id').value = pluginId;
-                
-                // Estos campos están en el segundo formulario, pero los llenamos desde ahora
                 document.getElementById('otp_plugin_id').value = pluginId;
                 document.getElementById('otp_plugin_slug').value = pluginSlug;
                 
@@ -47,7 +48,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Lógica para enviar el número y recibir el OTP
     const phoneForm = document.getElementById('phone-form');
     if (phoneForm) {
         phoneForm.addEventListener('submit', function(e) {
@@ -56,15 +56,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const submitButton = this.querySelector('button[type="submit"]');
             
             submitButton.disabled = true;
-            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Enviando...';
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Enviando...';
 
             const formData = new FormData(this);
             formData.set('phone_number', iti.getNumber());
 
-            fetch(SITE_URL + '/api/send-otp.php', {
-                method: 'POST',
-                body: formData
-            })
+            fetch(SITE_URL + '/api/send-otp.php', { method: 'POST', body: formData })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -75,9 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     feedbackDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
                 }
             })
-            .catch(error => {
-                feedbackDiv.innerHTML = '<div class="alert alert-danger">Error de conexión. Inténtalo de nuevo.</div>';
-            })
+            .catch(error => { feedbackDiv.innerHTML = '<div class="alert alert-danger">Error de conexión.</div>'; })
             .finally(() => {
                 submitButton.disabled = false;
                 submitButton.innerHTML = 'Enviar Código de Verificación';
@@ -85,7 +80,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Lógica para verificar el OTP y procesar la descarga/registro
     const otpForm = document.getElementById('otp-form');
     if (otpForm) {
         otpForm.addEventListener('submit', function(e) {
@@ -94,51 +88,36 @@ document.addEventListener('DOMContentLoaded', function() {
             const submitButton = this.querySelector('button[type="submit"]');
 
             submitButton.disabled = true;
-            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Verificando...';
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Verificando...';
 
             const formData = new FormData(this);
 
-            fetch(SITE_URL + '/api/verify-otp.php', {
-                method: 'POST',
-                body: formData
-            })
+            fetch(SITE_URL + '/api/verify-otp.php', { method: 'POST', body: formData })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     let successMessage = `<div class="alert alert-success">${data.message}</div>`;
-
                     if (data.license_key) {
                         successMessage += `
                         <div class="alert alert-info mt-3">
                             <h5 class="alert-heading">¡Importante! Guarda tu Licencia</h5>
-                            <p>Usa la siguiente clave para activar todas las funcionalidades del plugin.</p>
-                            <hr>
-                            <p class="mb-0"><strong>Clave de Licencia:</strong> <code class="user-select-all">${data.license_key}</code></p>
+                            <p>Usa esta clave para activar el plugin.</p><hr>
+                            <p class="mb-0"><strong>Clave:</strong> <code class="user-select-all">${data.license_key}</code></p>
                             <p class="mb-0"><strong>Expira:</strong> ${data.expires_at}</p>
                         </div>`;
                     }
-                    
                     feedbackDiv.innerHTML = successMessage;
                     otpForm.reset();
-
+                    setTimeout(() => { window.location.href = data.download_url; }, 3000);
                     setTimeout(() => {
-                        window.location.href = data.download_url;
-                    }, 3000);
-
-                    setTimeout(() => {
-                        if (otpModalElement) {
-                           const modal = bootstrap.Modal.getInstance(otpModalElement);
-                           if (modal) modal.hide();
-                        }
+                        const modal = bootstrap.Modal.getInstance(otpModalElement);
+                        if (modal) modal.hide();
                     }, 10000);
-
                 } else {
                     feedbackDiv.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
                 }
             })
-            .catch(error => {
-                feedbackDiv.innerHTML = '<div class="alert alert-danger">Error de conexión. Inténtalo de nuevo.</div>';
-            })
+            .catch(error => { feedbackDiv.innerHTML = '<div class="alert alert-danger">Error de conexión.</div>'; })
             .finally(() => {
                 submitButton.disabled = false;
                 submitButton.innerHTML = 'Verificar y Descargar';
@@ -146,18 +125,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Lógica para el modal de video
     const videoModal = document.getElementById('videoModal');
     if (videoModal) {
         videoModal.addEventListener('show.bs.modal', function(event) {
             const button = event.relatedTarget;
             const videoSrc = button.getAttribute('data-video-src');
-            const iframe = videoModal.querySelector('iframe');
-            iframe.src = videoSrc;
+            videoModal.querySelector('iframe').src = videoSrc;
         });
-        videoModal.addEventListener('hide.bs.modal', function(event) {
-            const iframe = videoModal.querySelector('iframe');
-            iframe.src = '';
+        videoModal.addEventListener('hide.bs.modal', function() {
+            videoModal.querySelector('iframe').src = '';
         });
     }
 });
