@@ -49,6 +49,7 @@ if ($header_links_result) {
         echo $app_settings['google_analytics_code'];
     }
     ?>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/css/intlTelInput.css">
 </head>
 <body class="d-flex flex-column min-vh-100">
     <header class="header-modern sticky-top">
