@@ -23,7 +23,7 @@
                 </div>
 
                 <div id="otp-input-section" style="display: none;">
-                    <p class="text-muted">Introduce el código que te enviamos y completa tus datos para crear tu cuenta y descargar.</p>
+                    <p class="text-muted">Introduce el código y completa tus datos para crear tu cuenta y descargar.</p>
                     <div id="otp-feedback" class="mb-2"></div>
                     <form id="otp-form">
                         <input type="hidden" name="plugin_id" id="otp_plugin_id">
