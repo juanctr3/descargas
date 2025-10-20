@@ -119,10 +119,10 @@ include 'includes/header.php';
                         <h4 class="text-success fw-bold">¡Gratis!</h4>
                         <div class="d-grid mt-3">
                             <button class="btn btn-primary btn-lg btn-download" 
-       							 data-plugin-id="<?php echo $plugin['id']; ?>" 
-       							 data-plugin-slug="<?php echo htmlspecialchars($plugin['slug']); ?>">
-   						 		<i class="fas fa-download me-2"></i>Descargar Ahora
-						</button>
+        						data-plugin-id="<?php echo $plugin['id']; ?>" 
+        						data-plugin-slug="<?php echo htmlspecialchars($plugin['slug']); ?>">
+    							<i class="fas fa-download me-2"></i>Descargar Ahora
+							</button>
                         </div>
                     <?php endif; ?>
                     
