@@ -1,0 +1,102 @@
+[20-Oct-2025 03:54:15 UTC] Error General en verify-otp.php: Faltan datos para la verificación. - Datos recibidos: {"otp_plugin_id":"3","otp_plugin_slug":"plugin-whatsapp-wordpress-woowapp","otp_code":"391205","user_name":"dfasfasdf","email":"sadfasf@fsadf.com","opt_in":"1"}
+[20-Oct-2025 03:54:16 UTC] Error General en verify-otp.php: Faltan datos para la verificación. - Datos recibidos: {"otp_plugin_id":"3","otp_plugin_slug":"plugin-whatsapp-wordpress-woowapp","otp_code":"391205","user_name":"dfasfasdf","email":"sadfasf@fsadf.com","opt_in":"1"}
+[20-Oct-2025 04:00:02 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
+[20-Oct-2025 04:37:57 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
+[20-Oct-2025 04:38:15 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
+[20-Oct-2025 05:00:02 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
+[20-Oct-2025 06:00:02 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
+[20-Oct-2025 07:00:02 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
+[20-Oct-2025 08:00:02 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
+[20-Oct-2025 09:00:02 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
+[20-Oct-2025 10:00:02 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
+[20-Oct-2025 11:00:02 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
+[20-Oct-2025 12:00:02 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
+[20-Oct-2025 13:00:02 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
+[20-Oct-2025 14:00:02 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
+[20-Oct-2025 15:00:02 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
+[20-Oct-2025 16:00:02 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
+[20-Oct-2025 17:00:02 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
+[20-Oct-2025 18:00:02 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
+[20-Oct-2025 19:00:03 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
+[20-Oct-2025 20:00:02 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
+[20-Oct-2025 21:00:02 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'd.review_reminder_sent' in 'WHERE' in /home/descargas/public_html/cron/send_review_reminders.php:45
+Stack trace:
+#0 /home/descargas/public_html/cron/send_review_reminders.php(45): mysqli->prepare()
+#1 {main}
+  thrown in /home/descargas/public_html/cron/send_review_reminders.php on line 45
