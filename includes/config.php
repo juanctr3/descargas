@@ -1,6 +1,14 @@
 <?php
-ini_set('display_errors', 1);
+// --- INICIO DE CAMBIOS ---
+// Desactivar mostrar errores en pantalla (importante para sitio en vivo)
+ini_set('display_errors', 0);
+// Activar el registro de errores en un archivo
+ini_set('log_errors', 1);
+// Definir el nombre y ubicación del archivo de registro (puedes cambiar 'php_error.log' si quieres)
+ini_set('error_log', __DIR__ . '/../php_error.log'); // Lo guardará en la carpeta principal del sitio
+// Reportar todos los errores
 error_reporting(E_ALL);
+// --- FIN DE CAMBIOS ---
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
