@@ -64,17 +64,26 @@ if ($plugin_data['requires_license']) {
 // NUEVO: El enlace de descarga ahora usa el 'update_identifier'
 $download_link = SITE_URL . '/download.php?uid=' . $plugin_data['update_identifier'] . '&license=' . urlencode($license_key);
 
+// --- INICIO DE LA MODIFICACIÓN ---
 $response = [
-    'slug'          => $plugin_data['slug'],
+    'slug'          => $plugin_data['slug'], // Usa el slug normal para WordPress
     'name'          => $plugin_data['title'],
     'new_version'   => $plugin_data['version'],
-    'url'           => SITE_URL . '/plugin/' . $plugin_data['slug'] . '/',
-    'package'       => $download_link,
-    'sections'      => ['description' => $plugin_data['short_description'], 'changelog' => '<p>Mejoras de rendimiento y corrección de errores.</p>'],
-    'author'        => $app_settings['site_name'],
-    'requires'      => '5.0',
-    'tested'        => '6.4', 
+    'url'           => SITE_URL . '/plugin/' . $plugin_data['slug'] . '/', // URL de la página del plugin
+    'package'       => $download_link, // Enlace de descarga generado antes
+    'sections'      => [
+        'description' => $plugin_data['short_description'] ?? '', // Descripción corta desde la BD
+        // Usamos el changelog de la BD. Si está vacío, ponemos un mensaje por defecto.
+        'changelog'   => !empty($plugin_data['changelog']) ? $plugin_data['changelog'] : '<p>No se proporcionaron detalles para esta versión.</p>'
+    ],
+    // Usamos el autor de la BD. Si está vacío, usamos el nombre del sitio (si existe), si no, 'Autor Desconocido'.
+    'author'        => !empty($plugin_data['author']) ? $plugin_data['author'] : ($app_settings['site_name'] ?? 'Autor Desconocido'),
+    // Usamos la versión mínima requerida de WP desde la BD. Si no hay, no se envía (null).
+    'requires'      => $plugin_data['requires'] ?? null,
+    // Usamos la versión probada de WP desde la BD. Si no hay, no se envía (null).
+    'tested'        => $plugin_data['tested'] ?? null,
 ];
+// --- FIN DE LA MODIFICACIÓN ---
 
 echo json_encode($response);
 ?>

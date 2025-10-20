@@ -49,7 +49,8 @@ try {
         $is_new_user = true;
         if (!empty($user_name) && !empty($email)) {
             $stmt_create = $mysqli->prepare("INSERT INTO users (name, email, whatsapp_number, password) VALUES (?, ?, ?, ?)");
-            $stmt_create->bind_param('ssss', $user_name, $email, $phone_number, '');
+        	$empty_password = '';
+			$stmt_create->bind_param('ssss', $user_name, $email, $phone_number, $empty_password); // <-- Cambia el '' por $empty_password
             $stmt_create->execute();
             $user_id = $stmt_create->insert_id;
             $stmt_create->close();
@@ -108,10 +109,16 @@ try {
     echo json_encode($response);
 
 } catch (mysqli_sql_exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Error de Base de Datos: ' . $e->getMessage()]);
-} catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Error General: ' . $e->getMessage()]);
+    // --- INICIO DE LA LÍNEA A AÑADIR ---
+    error_log("Error de Base de Datos en verify-otp.php: " . $e->getMessage() . " - Datos recibidos: " . json_encode($_POST));
+    // --- FIN DE LA LÍNEA A AÑADIR ---
+    echo json_encode(['success' => false, 'error' => 'database_error', 'message' => 'Ocurrió un error al procesar tu solicitud.']);
+} catch (Exception $e) { // Captura otras excepciones generales
+    // --- INICIO DE LA LÍNEA A AÑADIR ---
+    error_log("Error General en verify-otp.php: " . $e->getMessage() . " - Datos recibidos: " . json_encode($_POST));
+    // --- FIN DE LA LÍNEA A AÑADIR ---
+    echo json_encode(['success' => false, 'error' => 'general_error', 'message' => $e->getMessage()]);
 }
 
-// --- FIN: CÓDIGO DE PRODUCCIÓN FINAL ---
+$mysqli->close(); // Asegúrate de que esta línea esté después de los catch
 ?>
