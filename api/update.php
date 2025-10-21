@@ -19,6 +19,26 @@ if (($action !== 'plugin_information' && $action !== 'download_package') || empt
     echo json_encode(['error' => 'Missing or invalid parameters.']);
     exit();
 }
+// --- INICIO: Código para registrar la consulta de actualización ---
+try {
+    $log_file = __DIR__ . '/update_checks.log'; // Nombre del archivo de registro (en la misma carpeta api)
+    $timestamp = date('Y-m-d H:i:s');
+    $ip_address = $_SERVER['REMOTE_ADDR'] ?? 'UNKNOWN_IP';
+    // Prepara el mensaje a guardar (puedes añadir más datos si quieres)
+    $log_message = "[$timestamp] Consulta recibida: ID='{$update_identifier}', Version='{$current_version}', Licencia='{$license_key}', IP='{$ip_address}'" . PHP_EOL;
+
+    // Añade el mensaje al final del archivo de registro
+    file_put_contents($log_file, $log_message, FILE_APPEND | LOCK_EX);
+
+} catch (Exception $e) {
+    // Opcional: Registra si hubo un error al escribir en el log (podría verse en php_error.log)
+    error_log("Error al escribir en update_checks.log: " . $e->getMessage());
+}
+// --- FIN: Código para registrar la consulta de actualización ---
+
+// --- BUSCAR EL PLUGIN POR SU IDENTIFICADOR ÚNICO --- (El código existente sigue aquí)
+$stmt_plugin = $mysqli->prepare("SELECT * FROM plugins WHERE update_identifier = ? AND status = 'active'");
+// ... resto del archivo ...
 
 // --- BUSCAR EL PLUGIN POR SU IDENTIFICADOR ÚNICO ---
 $stmt_plugin = $mysqli->prepare("SELECT * FROM plugins WHERE update_identifier = ? AND status = 'active'");
